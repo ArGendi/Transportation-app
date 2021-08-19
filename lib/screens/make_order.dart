@@ -32,6 +32,20 @@ class _MakeOrderState extends State<MakeOrder> {
     _receiverAddress = receiverAddress;
   }
 
+  _onSubmit(){
+    FocusScope.of(context).unfocus();
+    bool valid = _formKey.currentState!.validate();
+    if(valid){
+      _formKey.currentState!.save();
+      print(_orderName);
+      print(_receiverName);
+      print(_receiverPhoneNumber);
+      print(_receiverAddress);
+      print(car);
+      print(isDeliveredToday);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Color getColor(Set<MaterialState> states) {
@@ -86,7 +100,7 @@ class _MakeOrderState extends State<MakeOrder> {
                     CustomTextField(
                       text: "هاتف المرسل أليه",
                       obscureText: false,
-                      textInputType: TextInputType.text,
+                      textInputType: TextInputType.phone,
                       setValue: _setReceiverPhoneNumber,
                       validation: (value) {
                         if (value.isEmpty) return 'أدخل هاتف المرسل أليه';
@@ -192,7 +206,7 @@ class _MakeOrderState extends State<MakeOrder> {
                     ),
                     SizedBox(height: 10,),
                     InkWell(
-                      onTap: (){},
+                      onTap: _onSubmit,
                       child: Container(
                         width: double.infinity,
                         height: 70,
