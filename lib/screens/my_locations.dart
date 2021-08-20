@@ -14,20 +14,129 @@ class MyLocation extends StatefulWidget {
 
 class _MyLocationState extends State<MyLocation> {
 
-  List locations = [];
+  List<String> _locations = [];
+  bool isLoadingLocation = false;
 
   Future<void> _getPosition() async {
     Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
     final coordinates = new Coordinates(position.latitude, position.longitude);
     var addresses = await Geocoder.local.findAddressesFromCoordinates(coordinates);
     var first = addresses.first;
-    print("${first.featureName} : ${first.addressLine}");
+    _locations.add(first.addressLine);
+    print(first.addressLine);
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _getPosition();
+  Widget _addCurrentLocationOrLoading(){
+    if(isLoadingLocation)
+      return CircularProgressIndicator(
+        strokeWidth: 3,
+        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+      );
+    else return Text(
+      'اضف موقعي الحالي',
+      style: TextStyle(
+        color: Colors.white,
+      ),
+    );
+  }
+
+  Widget _listViewOfAddresses(){
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: _locations.length,
+      itemBuilder: (BuildContext context, int index) {
+        List<String> location = _locations[index].split(',');
+        String firstAddressPart = location.first;
+        String restOfAddress = location[1] + ', ' + location[2];
+        return Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      firstAddressPart,
+                      style: TextStyle(
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      restOfAddress,
+                      style: TextStyle(
+                        //color: Colors.grey[700],
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+                Icon(
+                  Icons.check,
+                  color: primaryColor,
+                )
+              ],
+            ),
+            Divider(height: 40,)
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _noLocationFoundInTheList(){
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.location_off_outlined,
+            color: Colors.redAccent,
+            size: 150,
+          ),
+          Text(
+            'لا يوجد موقع',
+            style: TextStyle(
+              fontSize: 18,
+            ),
+          ),
+          Text(
+            'من فضلك ادخل موقع',
+            style: TextStyle(
+              fontSize: 18,
+            ),
+          ),
+          SizedBox(height: 30,),
+          InkWell(
+            onTap: () async{
+              setState(() { isLoadingLocation = true; });
+              await _getPosition();
+              setState(() { isLoadingLocation = false; });
+            },
+            child: Container(
+              width: double.infinity,
+              height: 60,
+              color: primaryColor,
+              child: Center(
+                child: _addCurrentLocationOrLoading(),
+              ),
+            ),
+          ),
+          SizedBox(height: 5,),
+          InkWell(
+            onTap: (){},
+            child: Container(
+              width: double.infinity,
+              height: 60,
+              color: Colors.grey.shade300,
+              child: Center(
+                child: Text('اضف موقع بنفسي',),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -44,91 +153,7 @@ class _MyLocationState extends State<MyLocation> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: locations.isNotEmpty ? ListView(
-          shrinkWrap: true,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'شارع 90',
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                    ),
-                    Text(
-                      'التجمع الرابع القاهرة',
-                      style: TextStyle(
-                        //color: Colors.grey[700],
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-                Icon(
-                  Icons.check,
-                  color: primaryColor,
-                )
-              ],
-            ),
-            Divider(height: 40,)
-          ],
-        ) : Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.location_off_outlined,
-                color: Colors.redAccent,
-                size: 150,
-              ),
-              Text(
-                'لا يوجد موقع',
-                style: TextStyle(
-                  fontSize: 20,
-                ),
-              ),
-              Text(
-                'من فضلك ادخل موقع',
-                style: TextStyle(
-                  fontSize: 20,
-                ),
-              ),
-              SizedBox(height: 25,),
-              InkWell(
-                onTap: (){},
-                child: Container(
-                  width: double.infinity,
-                  height: 60,
-                  color: primaryColor,
-                  child: Center(
-                    child: Text(
-                      'اضف موقعي الحالي',
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 5,),
-              InkWell(
-                onTap: (){},
-                child: Container(
-                  width: double.infinity,
-                  height: 60,
-                  color: Colors.grey.shade300,
-                  child: Center(
-                    child: Text('اضف موقع بنفسي',),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        child: _locations.isNotEmpty ? _listViewOfAddresses() : _noLocationFoundInTheList(),
       ),
     );
   }
